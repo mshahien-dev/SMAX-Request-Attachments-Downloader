@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMAX Attachment Manager</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <header>
+        <div class="logo-section">
+          <h1>SMAX Attachments</h1>
+          <span id="status-badge" class="badge offline">Unauthorized</span>
+        </div>
+        <div class="actions">
+          <input
+            type="text"
+            id="download-path"
+            class="path-input"
+            placeholder="Download folder (default: Downloaded Attachments)"
+          />
+          <button id="btn-login" class="btn secondary">Get Data</button>
+          <button id="btn-download-all" class="btn primary" disabled>
+            Download All
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <div class="table-container">
+          <table id="data-table">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Display Label</th>
+                <th>Attachments</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
