@@ -127,7 +127,7 @@ function downloadFile(id, name, requestId, requestName) {
     /[^a-zA-Z0-9-_]/g,
     "_",
   );
-  const finalFileName = `${requestId}-${safeRequestName}-${name}-${id}`;
+  const finalFileName = `${requestId}-${safeRequestName}-${id}-${name}`;
 
   const localDownloadUrl = `http://127.0.0.1:5000/download/${id}`;
 
@@ -154,7 +154,7 @@ function downloadFile(id, name, requestId, requestName) {
 }
 
 function downloadAllFile(allAttachments) {
-  const customPath = downloadPathInput.value.trim();
+  const customPath = downloadPathInput.value.trim() || "C:\\attachments";
 
   // Send the download path to Python first
   fetch("http://127.0.0.1:5000/set-download-path", {
@@ -200,7 +200,7 @@ function startDownloadAll(allAttachments) {
       "_",
     );
     // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
-    const finalFileName = `${att.requestId}-${safeRequestName}-${att.name}-${att.id}`;
+    const finalFileName = `${att.requestId}-${safeRequestName}-${att.id}-${att.name}`;
 
     // Send to Python backend to save directly
     const localDownloadUrl = `http://127.0.0.1:5000/save-file/${att.id}/${encodeURIComponent(finalFileName)}`;
