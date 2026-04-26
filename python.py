@@ -46,7 +46,7 @@ def get_smax_data():
 
         # Step 2: Fetch Data from EMS
 
-        data_url = f"{BASE_URL}/rest/{TENANT_ID}/ems/Request?layout=Id,DisplayLabel,RequestAttachments&size=100"
+        data_url = f"{BASE_URL}/rest/{TENANT_ID}/ems/Request?layout=Id,DisplayLabel,RequestAttachments&size=1000000"
 
         headers = {
             "Authorization": f"Bearer {token}",
@@ -105,6 +105,7 @@ def set_download_path():
 
 @app.route("/save-file/<file_id>/<file_name>", methods=["GET"])
 def save_smax_file(file_id, file_name):
+    """Save file with naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>"""
 
     global token
 

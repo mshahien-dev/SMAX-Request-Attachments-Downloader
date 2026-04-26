@@ -122,12 +122,12 @@ function renderTable(entities) {
 function downloadFile(id, name, requestId, requestName) {
   console.log("Downloading via Python:", id, name);
 
-  // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<REQUEST-ATTACHMENT-NAME>
+  // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
   const safeRequestName = (requestName || "unknown").replace(
     /[^a-zA-Z0-9-_]/g,
     "_",
   );
-  const finalFileName = `${requestId}-${safeRequestName}-${name}`;
+  const finalFileName = `${requestId}-${safeRequestName}-${name}-${id}`;
 
   const localDownloadUrl = `http://127.0.0.1:5000/download/${id}`;
 
@@ -199,7 +199,8 @@ function startDownloadAll(allAttachments) {
       /[^a-zA-Z0-9-_]/g,
       "_",
     );
-    const finalFileName = `${att.requestId}-${safeRequestName}-${att.name}`;
+    // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
+    const finalFileName = `${att.requestId}-${safeRequestName}-${att.name}-${att.id}`;
 
     // Send to Python backend to save directly
     const localDownloadUrl = `http://127.0.0.1:5000/save-file/${att.id}/${encodeURIComponent(finalFileName)}`;
