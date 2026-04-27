@@ -1,137 +1,74 @@
-const TENANT_ID = "481187910";
-
-const BASE_URL = "https://master.smax.com";
-
 let ALL_ATTACHMENTS = [];
 
 // DOM Elements
-
 const tableBody = document.getElementById("table-body");
-
 const btnLogin = document.getElementById("btn-login");
-
 const btnDownloadAll = document.getElementById("btn-download-all");
-
 const statusBadge = document.getElementById("status-badge");
-
 const downloadPathInput = document.getElementById("download-path");
 
-btnLogin.addEventListener("click", async () => {
-  const username = "root";
+const API_BASE = "http://127.0.0.1:5000";
 
-  const password = "mM123456@@";
-
+btnLogin.addEventListener("click", () => {
   statusBadge.textContent = "Logging in...";
-
-  try {
-    // Proceed to fetch the attachments
-
-    fetchData();
-
-    btnDownloadAll.disabled = false;
-  } catch (error) {
-    alert("Login failed. Check your credentials or CORS settings.");
-
-    statusBadge.textContent = "Offline";
-  }
+  fetchData()
+    .then(() => (btnDownloadAll.disabled = false))
+    .catch(() => {
+      alert("Login failed. Check your credentials or CORS settings.");
+      statusBadge.textContent = "Offline";
+    });
 });
 
 async function fetchData() {
   statusBadge.textContent = "Fetching via Python...";
+  const response = await fetch(`${API_BASE}/get-data`);
+  const data = await response.json();
 
-  try {
-    // Pointing to your local Python server instead of SMAX
+  if (!data.entities) throw new Error("No data found");
 
-    const response = await fetch("http://127.0.0.1:5000/get-data");
-
-    const data = await response.json();
-
-    if (data.entities) {
-      renderTable(data.entities);
-
-      statusBadge.textContent = "Data Loaded";
-
-      statusBadge.className = "badge online";
-    } else {
-      throw new Error("No data found");
-    }
-  } catch (error) {
-    console.error(error);
-
-    alert("Make sure your Python script is running!");
-  }
+  renderTable(data.entities);
+  statusBadge.textContent = "Data Loaded";
+  statusBadge.className = "badge online";
 }
 
 function renderTable(entities) {
   tableBody.innerHTML = "";
-
   ALL_ATTACHMENTS = [];
 
   entities.forEach((entity) => {
     const props = entity.properties;
-
     if (!props.RequestAttachments) return;
 
     const attachments = JSON.parse(
       props.RequestAttachments,
     ).complexTypeProperties;
+    const attachmentHtml = attachments
+      .map((att) => {
+        const file = att.properties;
+        ALL_ATTACHMENTS.push({
+          id: file.id,
+          name: file.file_name,
+          requestId: props.Id,
+          requestName: props.DisplayLabel,
+        });
+        return `<div class="attachment-item"><span>${file.file_name}</span><a href="#" class="dl-link" onclick="downloadFile('${file.id}', '${file.file_name.replace(/'/g, "\\'")}', ${props.Id}, '${props.DisplayLabel.replace(/'/g, "\\'")}')">Download</a></div>`;
+      })
+      .join("");
 
-    let attachmentHtml = "";
-
-    attachments.forEach((att) => {
-      const file = att.properties;
-
-      ALL_ATTACHMENTS.push({
-        id: file.id,
-        name: file.file_name,
-        requestId: props.Id,
-        requestName: props.DisplayLabel,
-      });
-
-      attachmentHtml += `
-
-                    <div class="attachment-item">
-
-                        <span>${file.file_name}</span>
-
-                        <a href="#" class="dl-link" onclick="downloadFile('${file.id}', '${file.file_name.replace(/'/g, "\\'")}', ${props.Id}, '${props.DisplayLabel.replace(/'/g, "\\'")}')">Download</a>
-
-                    </div>
-
-                `;
-    });
-
-    const row = `
-
-                <tr>
-
-                    <td><strong>#${props.Id}</strong></td>
-
-                    <td>${props.DisplayLabel}</td>
-
-                    <td>${attachmentHtml}</td>
-
-                </tr>
-
-            `;
-
-    tableBody.innerHTML += row;
+    tableBody.innerHTML += `<tr><td><strong>#${props.Id}</strong></td><td>${props.DisplayLabel}</td><td>${attachmentHtml}</td></tr>`;
   });
 }
 
+// Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
+function formatFileName(requestId, requestName, attachmentId, fileName) {
+  const safeName = (requestName || "unknown").replace(/[^a-zA-Z0-9-_]/g, "_");
+  return `${requestId}-${safeName}-${attachmentId}-${fileName}`;
+}
+
 function downloadFile(id, name, requestId, requestName) {
-  console.log("Downloading via Python:", id, name);
+  const finalFileName = formatFileName(requestId, requestName, id, name);
 
-  // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
-  const safeRequestName = (requestName || "unknown").replace(
-    /[^a-zA-Z0-9-_]/g,
-    "_",
-  );
-  const finalFileName = `${requestId}-${safeRequestName}-${id}-${name}`;
-
-  const localDownloadUrl = `http://127.0.0.1:5000/download/${id}`;
-
-  fetch(localDownloadUrl)
+  fetch(`${API_BASE}/download/${id}`)
     .then((resp) => {
       if (!resp.ok) throw new Error("Proxy download failed");
       return resp.blob();
@@ -139,7 +76,6 @@ function downloadFile(id, name, requestId, requestName) {
     .then((blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.style.display = "none";
       a.href = url;
       a.download = finalFileName;
       document.body.appendChild(a);
@@ -156,71 +92,54 @@ function downloadFile(id, name, requestId, requestName) {
 function downloadAllFile(allAttachments) {
   const customPath = downloadPathInput.value.trim() || "C:\\attachments";
 
-  // Send the download path to Python first
-  fetch("http://127.0.0.1:5000/set-download-path", {
+  fetch(`${API_BASE}/set-download-path`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: customPath }),
   })
     .then((resp) => resp.json())
-    .then((data) => {
-      console.log("Download path set to:", data.path);
-      startDownloadAll(allAttachments);
-    })
-    .catch((err) => {
-      console.error("Failed to set download path:", err);
+    .then((data) => startDownloadAll(allAttachments))
+    .catch(() => {
       alert("Failed to configure download folder. Using default.");
       startDownloadAll(allAttachments);
     });
 }
 
 function startDownloadAll(allAttachments) {
-  console.log(
-    "Downloading via Python All Attachments:",
-    allAttachments.length,
-    "files",
-  );
-
-  let index = 0;
-  let failed = 0;
-  let success = 0;
+  let index = 0,
+    failed = 0,
+    success = 0;
 
   function downloadNext() {
     if (index >= allAttachments.length) {
-      console.log(
-        `All downloads completed! Success: ${success}, Failed: ${failed}`,
-      );
       alert(`Download complete!\nSuccess: ${success}\nFailed: ${failed}`);
       return;
     }
 
     const att = allAttachments[index];
-    const safeRequestName = (att.requestName || "unknown").replace(
-      /[^a-zA-Z0-9-_]/g,
-      "_",
+    const finalFileName = formatFileName(
+      att.requestId,
+      att.requestName,
+      att.id,
+      att.name,
     );
-    // Naming convention: <REQUEST-ID>-<REQUEST-NAME>-<ATTACHMENT-NAME>-<ATTACHMENT-ID>
-    const finalFileName = `${att.requestId}-${safeRequestName}-${att.id}-${att.name}`;
 
-    // Send to Python backend to save directly
-    const localDownloadUrl = `http://127.0.0.1:5000/save-file/${att.id}/${encodeURIComponent(finalFileName)}`;
-
-    fetch(localDownloadUrl)
+    fetch(
+      `${API_BASE}/save-file/${att.id}/${encodeURIComponent(finalFileName)}`,
+    )
       .then((resp) => {
-        if (!resp.ok) throw new Error("Proxy download failed");
+        if (!resp.ok) throw new Error();
         return resp.json();
       })
-      .then((data) => {
-        console.log(`Saved: ${data.file}`);
+      .then(() => {
         success++;
+      })
+      .catch(() => {
+        failed++;
+      })
+      .finally(() => {
         index++;
         setTimeout(downloadNext, 50);
-      })
-      .catch((err) => {
-        console.error("Download failed for:", att.name, err);
-        failed++;
-        index++;
-        downloadNext();
       });
   }
 
