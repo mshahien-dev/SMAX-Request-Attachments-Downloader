@@ -17,6 +17,25 @@
           <h1>SMAX Attachments</h1>
           <span id="status-badge" class="badge offline">Unauthorized</span>
         </div>
+        <div class="filters">
+          <div class="filter-group">
+            <label for="filter-display-label">Display Label:</label>
+            <input
+              type="text"
+              id="filter-display-label"
+              class="filter-input"
+              placeholder="e.g., Service Request"
+            />
+          </div>
+          <div class="filter-group">
+            <label for="filter-date-from">From Date:</label>
+            <input type="date" id="filter-date-from" class="filter-input" />
+          </div>
+          <div class="filter-group">
+            <label for="filter-date-to">To Date:</label>
+            <input type="date" id="filter-date-to" class="filter-input" />
+          </div>
+        </div>
         <div class="actions">
           <span><strong>Download Path:</strong></span>
           <input

@@ -29,6 +29,52 @@ header {
   align-items: center;
   padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo-section h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.filter-input[type="text"] {
+  width: 180px;
+}
+
+.filter-input[type="date"] {
+  width: 150px;
 }
 
 .badge {
